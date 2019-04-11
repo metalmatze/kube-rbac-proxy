@@ -20,7 +20,7 @@ func testBasics(s *kubetest.Suite) kubetest.TestSuite {
 
 			Given: kubetest.Setups(
 				kubetest.CreatedManifests(
-					s.KubeClient,
+					s.KubeConfig,
 					"basics/clusterRole.yaml",
 					"basics/clusterRoleBinding.yaml",
 					"basics/deployment.yaml",
@@ -52,7 +52,7 @@ func testBasics(s *kubetest.Suite) kubetest.TestSuite {
 
 			Given: kubetest.Setups(
 				kubetest.CreatedManifests(
-					s.KubeClient,
+					s.KubeConfig,
 					"basics/clusterRole.yaml",
 					"basics/clusterRoleBinding.yaml",
 					"basics/deployment.yaml",

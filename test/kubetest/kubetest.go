@@ -6,10 +6,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 type Suite struct {
+	KubeConfig *rest.Config
 	KubeClient kubernetes.Interface
 }
 
@@ -24,7 +26,10 @@ func NewSuiteFromKubeconfig(path string) (*Suite, error) {
 		return nil, err
 	}
 
-	return &Suite{KubeClient: client}, nil
+	return &Suite{
+		KubeConfig: config,
+		KubeClient: client,
+	}, nil
 }
 
 type TestSuite func(t *testing.T)

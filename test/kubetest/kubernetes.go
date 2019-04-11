@@ -5,21 +5,22 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
-	appsv1 "k8s.io/api/apps/v1"
+	"github.com/brancz/uclient"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/wait"
 	kubeyaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
-func CreatedManifests(client kubernetes.Interface, paths ...string) Setup {
+func CreatedManifests(config *rest.Config, paths ...string) Setup {
+	client := uclient.NewForConfig(config)
+
 	return func(ctx *ScenarioContext) error {
 		for _, path := range paths {
 			content, err := ioutil.ReadFile(path)
@@ -31,132 +32,31 @@ func CreatedManifests(client kubernetes.Interface, paths ...string) Setup {
 				return fmt.Errorf("manifest has no content: %s", path)
 			}
 
-			var meta metav1.TypeMeta
-			if err = yaml.Unmarshal(content, &meta); err != nil {
+			r := bytes.NewReader(content)
+
+			res := map[string]interface{}{}
+			err = kubeyaml.NewYAMLOrJSONDecoder(r, r.Len()).Decode(&res)
+			if err != nil {
 				return err
 			}
 
-			// TODO: This needs to be more generic!
-
-			kind := strings.ToLower(meta.Kind)
-			switch kind {
-			case "clusterrole":
-				if err := createClusterRole(client, ctx, content); err != nil {
-					return err
-				}
-			case "clusterrolebinding":
-				if err := createClusterRoleBinding(client, ctx, content); err != nil {
-					return err
-				}
-			case "deployment":
-				if err := createDeployment(client, ctx, content); err != nil {
-					return err
-				}
-			case "service":
-				if err := createService(client, ctx, content); err != nil {
-					return err
-				}
-			case "serviceaccount":
-				if err := createServiceAccount(client, ctx, content); err != nil {
-					return err
-				}
-			default:
-				return fmt.Errorf("unable to unmarshal manifest with unknown kind: %s", kind)
+			u := &unstructured.Unstructured{Object: res}
+			c, err := client.ForUnstructured(u)
+			if err != nil {
+				return err
 			}
+
+			_, err = c.Create(u, metav1.CreateOptions{})
+			if err != nil {
+				return err
+			}
+
+			ctx.AddFinalizer(func() error {
+				return c.Delete(u.GetName(), nil)
+			})
 		}
 		return nil
 	}
-}
-
-func createClusterRole(client kubernetes.Interface, ctx *ScenarioContext, content []byte) error {
-	r := bytes.NewReader(content)
-
-	var cr *rbacv1.ClusterRole
-	if err := kubeyaml.NewYAMLOrJSONDecoder(r, r.Len()).Decode(&cr); err != nil {
-		return err
-	}
-
-	_, err := client.RbacV1().ClusterRoles().Create(cr)
-
-	ctx.AddFinalizer(func() error {
-		return client.RbacV1().ClusterRoles().Delete(cr.Name, nil)
-	})
-
-	return err
-}
-
-func createClusterRoleBinding(client kubernetes.Interface, ctx *ScenarioContext, content []byte) error {
-	r := bytes.NewReader(content)
-
-	var crb *rbacv1.ClusterRoleBinding
-	if err := kubeyaml.NewYAMLOrJSONDecoder(r, r.Len()).Decode(&crb); err != nil {
-		return err
-	}
-
-	_, err := client.RbacV1().ClusterRoleBindings().Create(crb)
-
-	ctx.AddFinalizer(func() error {
-		return client.RbacV1().ClusterRoleBindings().Delete(crb.Name, nil)
-	})
-
-	return err
-}
-
-func createDeployment(client kubernetes.Interface, ctx *ScenarioContext, content []byte) error {
-	r := bytes.NewReader(content)
-
-	var d appsv1.Deployment
-	if err := kubeyaml.NewYAMLOrJSONDecoder(r, r.Len()).Decode(&d); err != nil {
-		return err
-	}
-
-	d.Namespace = ctx.Namespace
-
-	_, err := client.AppsV1().Deployments(d.Namespace).Create(&d)
-
-	ctx.AddFinalizer(func() error {
-		return client.AppsV1().Deployments(d.Namespace).Delete(d.Name, nil)
-	})
-
-	return err
-}
-
-func createService(client kubernetes.Interface, ctx *ScenarioContext, content []byte) error {
-	r := bytes.NewReader(content)
-
-	var s *corev1.Service
-	if err := kubeyaml.NewYAMLOrJSONDecoder(r, r.Len()).Decode(&s); err != nil {
-		return err
-	}
-
-	s.Namespace = ctx.Namespace
-
-	_, err := client.CoreV1().Services(s.Namespace).Create(s)
-
-	ctx.AddFinalizer(func() error {
-		return client.CoreV1().Services(s.Namespace).Delete(s.Name, nil)
-	})
-
-	return err
-}
-
-func createServiceAccount(client kubernetes.Interface, ctx *ScenarioContext, content []byte) error {
-	r := bytes.NewReader(content)
-
-	var sa *corev1.ServiceAccount
-	if err := kubeyaml.NewYAMLOrJSONDecoder(r, r.Len()).Decode(&sa); err != nil {
-		return err
-	}
-
-	sa.Namespace = ctx.Namespace
-
-	_, err := client.CoreV1().ServiceAccounts(sa.Namespace).Create(sa)
-
-	ctx.AddFinalizer(func() error {
-		return client.CoreV1().ServiceAccounts(sa.Namespace).Delete(sa.Name, nil)
-	})
-
-	return err
 }
 
 // PodsAreReady waits for a number if replicas matching the given labels to be ready.

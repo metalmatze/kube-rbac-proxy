@@ -1,5 +1,5 @@
-hash: 30fdf2c9af84106ba9a638393fc78d94d31396eb4f01cb559151832ef5cc9c28
-updated: 2019-01-23T10:58:39.927742117+01:00
+hash: 36b6f480f22b00ffe5b0b5ed4bd68eae4522e72216dc4524e7c290655dbb7f18
+updated: 2019-04-11T18:02:52.231850947+02:00
 imports:
 - name: github.com/Azure/go-ansiterm
   version: d6e3b3328b783f23731bc4d058875b0371ff8109
@@ -9,6 +9,8 @@ imports:
   version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
   subpackages:
   - quantile
+- name: github.com/brancz/uclient
+  version: 45003037f4ecf5c111711978fcd189ba332883de
 - name: github.com/coreos/go-oidc
   version: 66476e0267012774b2f9767d2d37a317d1f1aac3
 - name: github.com/davecgh/go-spew

@@ -27,3 +27,4 @@ import:
   version: ed066c81e75eba56dd9bd2139ade88125b855585
 - package: github.com/oklog/run
   version: ^1.0.0
+- package: github.com/brancz/uclient
