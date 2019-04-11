@@ -28,3 +28,5 @@ import:
 - package: github.com/oklog/run
   version: ^1.0.0
 - package: github.com/brancz/uclient
+- package: github.com/pkg/errors
+  version: ~0.8.1

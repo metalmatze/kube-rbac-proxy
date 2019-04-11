@@ -1,5 +1,5 @@
-hash: 36b6f480f22b00ffe5b0b5ed4bd68eae4522e72216dc4524e7c290655dbb7f18
-updated: 2019-04-11T18:02:52.231850947+02:00
+hash: 5653c5c66a170617cf8351f6262e9b98dedcd78885e82edbf1d4c68bc689329e
+updated: 2019-04-11T19:14:21.848322419+02:00
 imports:
 - name: github.com/Azure/go-ansiterm
   version: d6e3b3328b783f23731bc4d058875b0371ff8109
@@ -93,6 +93,8 @@ imports:
   version: 4dadeb3030eda0273a12382bb2348ffc7c9d1a39
 - name: github.com/peterbourgon/diskv
   version: 5f041e8faa004a95c88a202771f4cc3e991971e6
+- name: github.com/pkg/errors
+  version: ba968bfe8b2f7e042a574c888954fccecfa385b4
 - name: github.com/pquerna/cachecontrol
   version: 0dec1b30a0215bb68605dfc568e8855066c9202d
   subpackages:
@@ -314,6 +316,7 @@ imports:
   subpackages:
   - discovery
   - discovery/fake
+  - dynamic
   - kubernetes
   - kubernetes/fake
   - kubernetes/scheme
