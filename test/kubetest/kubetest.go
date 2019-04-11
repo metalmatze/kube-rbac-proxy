@@ -104,7 +104,7 @@ func (s Scenario) Run(t *testing.T, opts ...RunOpts) bool {
 			}
 		}
 
-		if s.Given != nil {
+		if s.Then != nil {
 			if err := s.Then(ctx); err != nil {
 				t.Errorf("checks failed: %v", err)
 			}
