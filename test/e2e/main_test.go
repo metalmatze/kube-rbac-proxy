@@ -33,7 +33,8 @@ func TestMain(m *testing.M) {
 
 func Test(t *testing.T) {
 	tests := map[string]kubetest.TestSuite{
-		"Basics": testBasics(suite),
+		"Basics":    testBasics(suite),
+		"Resources": testResources(suite),
 	}
 
 	for name, tc := range tests {
